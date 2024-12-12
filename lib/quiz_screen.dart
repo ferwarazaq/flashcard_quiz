@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/flashcard.dart';
 
@@ -8,15 +9,47 @@ class QuizScreen extends StatefulWidget {
 
 class _QuizScreenState extends State<QuizScreen> {
   final List<Flashcard> flashcards = [
-    Flashcard(question: 'What is Flutter?', answer: 'A UI toolkit for building natively compiled applications'),
-    Flashcard(question: 'What is Dart?', answer: 'A programming language used by Flutter'),
-    // Add more flashcards for the quiz here
+    Flashcard(
+      question: 'What is Flutter?',
+      options: [
+        'A programming language',
+        'A UI toolkit for building natively compiled applications',
+        'A database',
+        'An operating system'
+      ],
+      correctAnswer: 'A UI toolkit for building natively compiled applications',
+    ),
+    Flashcard(
+      question: 'What is Dart?',
+      options: [
+        'A programming language used by Flutter',
+        'A database system',
+        'A version control system',
+        'An API library'
+      ],
+      correctAnswer: 'A programming language used by Flutter',
+    ),
+    // Add more flashcards here
   ];
 
   int currentIndex = 0;
-  bool showAnswer = false;
   int correctAnswers = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    shuffleFlashcards(); // Shuffle at the beginning
+  }
+
+  /// Shuffle questions and options
+  void shuffleFlashcards() {
+    flashcards.shuffle();
+    for (var flashcard in flashcards) {
+      flashcard.options.shuffle();
+    }
+  }
+
+  /// Go to the next question
   void nextQuestion(bool correct) {
     if (correct) {
       correctAnswers++;
@@ -24,7 +57,15 @@ class _QuizScreenState extends State<QuizScreen> {
 
     setState(() {
       currentIndex++;
-      showAnswer = false;
+    });
+  }
+
+  /// Reset the quiz
+  void resetQuiz() {
+    setState(() {
+      currentIndex = 0;
+      correctAnswers = 0;
+      shuffleFlashcards(); // Shuffle again when resetting
     });
   }
 
@@ -32,21 +73,54 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget build(BuildContext context) {
     if (currentIndex >= flashcards.length) {
       return Scaffold(
-        appBar: AppBar(title: Text('Quiz Finished')),
-        body: Center(
+        appBar: AppBar(
+          title: Text('Quiz Finished', style: TextStyle(fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.deepPurple,
+        ),
+        body: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple.shade700, Colors.purple.shade300],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Quiz Finished!'),
-              Text('Correct Answers: $correctAnswers'),
+              Text(
+                'Quiz Finished!',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Correct Answers: $correctAnswers',
+                style: TextStyle(
+                  fontSize: 22,
+                  color: Colors.white70,
+                ),
+              ),
+              SizedBox(height: 30),
               ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    currentIndex = 0;
-                    correctAnswers = 0;
-                  });
-                },
-                child: Text('Restart Quiz'),
+                onPressed: resetQuiz,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.deepPurple,
+                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text(
+                  'Restart Quiz',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
@@ -55,34 +129,71 @@ class _QuizScreenState extends State<QuizScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text('Quiz')),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('Question: ${flashcards[currentIndex].question}', style: TextStyle(fontSize: 24)),
-          SizedBox(height: 20),
-          if (showAnswer) ...[
-            Text('Answer: ${flashcards[currentIndex].answer}', style: TextStyle(fontSize: 20)),
+      appBar: AppBar(
+        title: Text('Quiz', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple.shade700, Colors.purple.shade300],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              'Question ${currentIndex + 1} of ${flashcards.length}',
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => nextQuestion(true),
-              child: Text('Correct'),
+            Text(
+              flashcards[currentIndex].question,
+              style: TextStyle(
+                fontSize: 24,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
             ),
-            ElevatedButton(
-              onPressed: () => nextQuestion(false),
-              child: Text('Incorrect'),
-            ),
-          ] else ...[
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  showAnswer = true;
-                });
-              },
-              child: Text('Show Answer'),
-            ),
+            SizedBox(height: 30),
+            ...flashcards[currentIndex].options.map((option) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    bool isCorrect = option == flashcards[currentIndex].correctAnswer;
+                    nextQuestion(isCorrect);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.deepPurple,
+                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    option,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ],
-        ],
+        ),
       ),
     );
   }

@@ -1,6 +1,11 @@
 class Flashcard {
   final String question;
-  final String answer;
+  final List<String> options; // List of options for answers
+  final String correctAnswer; // Correct answer
 
-  Flashcard({required this.question, required this.answer});
+  Flashcard({
+    required this.question,
+    required this.options,
+    required this.correctAnswer,
+  });
 }
